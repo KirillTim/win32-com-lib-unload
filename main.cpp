@@ -3,6 +3,7 @@
 #include <dia2.h>
 #include <diacreate.h>
 #include <string>
+#include "dll_ref_counter.h"
 
 using namespace std;
 
@@ -10,6 +11,8 @@ const static constexpr wchar_t *msdia_dll_w = L"msdia140.dll";
 const static constexpr char *msdia_dll = "msdia140.dll";
 
 const char *libdia_path = R"(..\lib\msdia140.dll)";
+
+DllRefCountReader refCountReader;
 
 void report_step(const std::string& step_name) {
     cout << step_name << endl;
@@ -20,10 +23,11 @@ void report_step(const std::string& step_name) {
 
 bool checkLibdiaLoaded() {
     if (GetModuleHandleA(msdia_dll)) {
-        std::cout << msdia_dll << " is loaded" << endl;
+        //cout << "getRefCount for " << msdia_dll << ": " << refCountReader.getRefCount(msdia_dll_w) << endl;
+        std::cout << msdia_dll << " is loaded, ref count: " << refCountReader.getRefCount(msdia_dll_w) << endl;
         return true;
     }
-    std::cout << msdia_dll << " is not loaded" << endl;
+    std::cout << msdia_dll << " is not loaded, ref count: " << refCountReader.getRefCount(msdia_dll_w) << endl;
     return false;
 }
 
@@ -42,6 +46,8 @@ bool loadLibDia() {
     HMODULE libdia = LoadLibraryA(libdia_path);
     if (!libdia) return false;
     std::cout << "LoadLibraryA return: " << libdia << endl;
+
+    checkLibdiaLoaded();
 
     HRESULT HR;
     CComPtr<IDiaDataSource> _diaDataSource;
@@ -78,6 +84,8 @@ bool loadLibDia() {
 
 int main() {
     report_step("process (pid: " + to_string(::_getpid()) + ") started...");
+
+    if (!refCountReader.init()) return 1;
 
     auto res = loadLibDia();
     std::cout << "result: " << res << endl;

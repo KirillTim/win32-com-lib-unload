@@ -48,6 +48,7 @@ bool loadLibDia() {
     // TODO: SHOULD WE DO THIS IN NEW CREATED THREAD
     if (FAILED(HR = NoRegCoCreate(msdia_dll_w, CLSID_DiaSource, IID_IDiaDataSource,
                                   reinterpret_cast<LPVOID *>(&_diaDataSource)))) {
+        std::cout << "NoRegCoCreate: FAILED" << endl;
         return false;
     }
     std::cout << "NoRegCoCreate: OK" << endl;

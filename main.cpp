@@ -23,7 +23,6 @@ void report_step(const std::string& step_name) {
 
 bool checkLibdiaLoaded() {
     if (GetModuleHandleA(msdia_dll)) {
-        //cout << "getRefCount for " << msdia_dll << ": " << refCountReader.getRefCount(msdia_dll_w) << endl;
         std::cout << msdia_dll << " is loaded, ref count: " << refCountReader.getRefCount(msdia_dll_w) << endl;
         return true;
     }
@@ -42,12 +41,12 @@ bool doFreeLibrary(HMODULE lib) {
 }
 
 bool loadLibDia() {
-    checkLibdiaLoaded();
+    checkLibdiaLoaded(); // msdia140.dll is not loaded, ref count: 0
     HMODULE libdia = LoadLibraryA(libdia_path);
     if (!libdia) return false;
-    std::cout << "LoadLibraryA return: " << libdia << endl;
+    std::cout << "LoadLibraryA return: " << libdia << endl; // LoadLibraryA return: 00007FFEB8220000
 
-    checkLibdiaLoaded();
+    checkLibdiaLoaded(); // msdia140.dll is loaded, ref count: 6
 
     HRESULT HR;
     CComPtr<IDiaDataSource> _diaDataSource;
@@ -57,27 +56,27 @@ bool loadLibDia() {
         std::cout << "NoRegCoCreate: FAILED" << endl;
         return false;
     }
-    std::cout << "NoRegCoCreate: OK" << endl;
+    std::cout << "NoRegCoCreate: OK" << endl; // NoRegCoCreate: OK
 
     report_step("libdia loaded...");
-    checkLibdiaLoaded();
+    checkLibdiaLoaded(); // msdia140.dll is loaded, ref count: 6
 
     _diaDataSource.Release();
 
     CoUninitialize();
 
     // first time
-    doFreeLibrary(libdia);
-    checkLibdiaLoaded();
+    doFreeLibrary(libdia); // FreeLibrary return: 1
+    checkLibdiaLoaded(); // msdia140.dll is loaded, ref count: 6
 
     // TODO WHY DO WE NEED TO CALL THIS TWICE???
     // second time
-    doFreeLibrary(libdia);
-    checkLibdiaLoaded();
+    doFreeLibrary(libdia); // FreeLibrary return: 1
+    checkLibdiaLoaded(); // msdia140.dll is not loaded, ref count: 0
 
     // module unloaded, FreeLibrary return false, GetLastError(): 126
-    doFreeLibrary(libdia);
-    checkLibdiaLoaded();
+    doFreeLibrary(libdia); // FreeLibrary return: 0, GetLastError(): 126
+    checkLibdiaLoaded(); // msdia140.dll is not loaded, ref count: 0
 
     return true;
 }
